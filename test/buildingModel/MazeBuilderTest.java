@@ -1,9 +1,8 @@
 package buildingModel;
 
 import buildingModel.guidance.Guidance;
-import buildingModel.guidance.GuidanceFromList;
+import buildingModel.guidance.SequentialGuidance;
 import buildingModel.guidance.PerPointGuidance;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.awt.*;
@@ -37,7 +36,7 @@ class MazeBuilderTest {
         final List<Direction> directions = List.of(
                 SOUTH, WEST, WEST, NORTH, NORTH, EAST
         );
-        mb = new MazeBuilder(5, 3, new GuidanceFromList(directions));
+        mb = new MazeBuilder(5, 3, new SequentialGuidance(directions));
 
         for (int i = 0; i < directions.size(); i++) {
             mb.moveAndBuild();
@@ -54,7 +53,7 @@ class MazeBuilderTest {
     @Test
     void stopsAtEdge() {
         final List<Direction> directions = List.of(NORTH, NORTH, EAST, EAST, SOUTH, SOUTH, SOUTH, WEST, WEST, WEST);
-        mb = new MazeBuilder(3, 3, new GuidanceFromList(directions));
+        mb = new MazeBuilder(3, 3, new SequentialGuidance(directions));
 
         assertDoesNotThrow(() -> {
             for (int i = 0; i < directions.size(); i++) {
@@ -73,7 +72,7 @@ class MazeBuilderTest {
     void doesNotCrossPath() {
         final List<Direction> directions = List.of(WEST, NORTH, EAST, SOUTH, SOUTH, EAST);
 
-        mb = new MazeBuilder(3, 3, new GuidanceFromList(directions));
+        mb = new MazeBuilder(3, 3, new SequentialGuidance(directions));
         for (int i = 0; i < directions.size(); i++) {
             mb.moveAndBuild();
         }
@@ -91,7 +90,7 @@ class MazeBuilderTest {
         final List<Direction> directions =
                 List.of(WEST, NORTH, EAST, SOUTH, EAST, SOUTH, WEST, SOUTH, WEST, SOUTH, NORTH);
 
-        mb = new MazeBuilder(3, 3, new GuidanceFromList(directions));
+        mb = new MazeBuilder(3, 3, new SequentialGuidance(directions));
         for (int i = 0; i < directions.size(); i++) {
             mb.moveAndBuild();
         }
@@ -117,7 +116,7 @@ class MazeBuilderTest {
     @Test
     void noWallBehindSelf() {
         final List<Direction> directions = List.of(WEST, EAST);
-        mb = new MazeBuilder(3, 1, new GuidanceFromList(directions));
+        mb = new MazeBuilder(3, 1, new SequentialGuidance(directions));
         for (int i = 0; i < directions.size(); i++) {
             mb.moveAndBuild();
         }
@@ -192,7 +191,7 @@ class MazeBuilderTest {
     @Test
     void tracksChangingPosition() {
         mb = new MazeBuilder(1, 5,
-                new GuidanceFromList(List.of(NORTH, NORTH)),
+                new SequentialGuidance(List.of(NORTH, NORTH)),
                 new LinkedBlockingQueue<>());
 
         mb.moveAndBuild();
@@ -207,7 +206,7 @@ class MazeBuilderTest {
     @Test
     void tracksChangingDirection() {
         mb = new MazeBuilder(3, 5,
-                new GuidanceFromList(List.of(NORTH, NORTH, WEST)),
+                new SequentialGuidance(List.of(NORTH, NORTH, WEST)),
                 new LinkedBlockingQueue<>());
 
         mb.moveAndBuild();
@@ -222,11 +221,20 @@ class MazeBuilderTest {
     }
 
     @Test
-    @Disabled
     void tracksStepsWhenBuilding() {
-        mb = new MazeBuilder(1, 1,
-                new PerPointGuidance(List.of(NORTH, WEST)),
+        mb = new MazeBuilder(1, 3,
+                new PerPointGuidance(List.of(NORTH, WEST, SOUTH, EAST)),
                 new LinkedBlockingQueue<>());
 
+        mb.moveAndBuild();
+        assertNull(mb.nextBuildingStep().orElseThrow().wall());
+        mb.moveAndBuild();
+        assertEquals(new Wall(0, 0, 0, -1),
+                mb.nextBuildingStep().orElseThrow().wall());
+        mb.moveAndBuild();
+        assertEquals(new Wall(0, 0, -1, 0),
+                mb.nextBuildingStep().orElseThrow().wall());
+        mb.moveAndBuild();
+        assertNull(mb.nextBuildingStep().orElseThrow().wall());
     }
 }

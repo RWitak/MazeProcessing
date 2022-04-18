@@ -13,6 +13,7 @@ public class MazeBuilder{
     private final Guidance guidance;
     private final boolean[][] map;
     private final Stack<Point> path;
+    private final Queue<Wall> walls = new ArrayDeque<>();
     private Queue<BuildingStep> queue = new LinkedBlockingQueue<>();
     private boolean isFinished = false;
 
@@ -20,16 +21,6 @@ public class MazeBuilder{
         this(mazeX, mazeY, guidance);
         this.queue = buildingSteps;
     }
-
-    public boolean[][] getMap() {
-        return map;
-    }
-
-    public Queue<Wall> getWalls() {
-        return walls;
-    }
-
-    private final Queue<Wall> walls = new ArrayDeque<>();
 
     public MazeBuilder(int maze_x, int maze_y, Guidance guidance) {
         this.maze_x = maze_x;
@@ -40,6 +31,14 @@ public class MazeBuilder{
         this.position = new Point(maze_x / 2, maze_y / 2);
         this.map = new boolean[maze_y][maze_x];
         map[position.y][position.x] = true;
+    }
+
+    public boolean[][] getMap() {
+        return map;
+    }
+
+    public Queue<Wall> getWalls() {
+        return walls;
     }
 
     public void moveAndBuild() {
@@ -66,18 +65,19 @@ public class MazeBuilder{
             }
         }
         if (!isPreviousPosition(nextPos)) {
-            buildWall(position, nextPos);
+            Wall wall = new Wall(position, nextPos);
+            walls.add(wall);
+            queue.add(new BuildingStep(position.getLocation(), direction, wall));
+        } else {
+            queue.add(new BuildingStep(position.getLocation(), direction, null));
         }
+
     }
 
     private void backtrack() {
         if (!path.empty()) {
             position.setLocation(path.pop());
         }
-    }
-
-    private void buildWall(Point p1, Point p2) {
-        walls.add(new Wall(p1, p2));
     }
 
     private boolean isInsideMaze(Point point) {

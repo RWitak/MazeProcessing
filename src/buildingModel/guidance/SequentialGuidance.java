@@ -11,18 +11,15 @@ import java.util.Optional;
 /**
  * Ignores current position and just guides in the provided directions.
  */
-public class GuidanceFromList implements Guidance {
+public class SequentialGuidance implements Guidance {
     private final Iterator<Direction> iter;
 
-    public GuidanceFromList(@NotNull Iterable<Direction> directions) {
+    public SequentialGuidance(@NotNull Iterable<Direction> directions) {
         iter = directions.iterator();
     }
 
     @Override
     public Optional<Direction> nextDirection(Point ignore) {
-        if (iter.hasNext()) {
-            return Optional.of(iter.next());
-        }
-        return Optional.empty();
+        return iter.hasNext() ? Optional.of(iter.next()) : Optional.empty();
     }
 }
