@@ -1,7 +1,10 @@
 package buildingModel;
 
+import buildingModel.guidance.Guidance;
+
 import java.awt.*;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class MazeBuilder{
     private final Point position;
@@ -10,7 +13,13 @@ public class MazeBuilder{
     private final Guidance guidance;
     private final boolean[][] map;
     private final Stack<Point> path;
+    private Queue<BuildingStep> queue = new LinkedBlockingQueue<>();
     private boolean isFinished = false;
+
+    public MazeBuilder(int mazeX, int mazeY, Guidance guidance, Queue<BuildingStep> buildingSteps) {
+        this(mazeX, mazeY, guidance);
+        this.queue = buildingSteps;
+    }
 
     public boolean[][] getMap() {
         return map;
@@ -51,6 +60,8 @@ public class MazeBuilder{
                 path.push(position.getLocation());
                 position.setLocation(nextPos);
                 map[position.y][position.x] = true;
+
+                queue.add(new BuildingStep(position.getLocation(), direction, null));
                 return;
             }
         }
@@ -84,5 +95,9 @@ public class MazeBuilder{
 
     public boolean isFinished() {
         return this.isFinished;
+    }
+
+    public Optional<BuildingStep> nextBuildingStep() {
+        return Optional.ofNullable(queue.poll());
     }
 }

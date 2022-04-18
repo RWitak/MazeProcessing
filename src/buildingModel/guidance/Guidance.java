@@ -1,4 +1,6 @@
-package buildingModel;
+package buildingModel.guidance;
+
+import buildingModel.Direction;
 
 import java.awt.*;
 import java.util.Optional;
