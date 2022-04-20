@@ -33,7 +33,7 @@ public class ProcessingMain extends PApplet {
 
     public void draw() {
         mazeBuilder.moveAndBuild();
-        final boolean[][] map = mazeBuilder.getMap();
+        final boolean[][] map = mazeBuilder.getMapArray();
         translate(SCREEN_X/2f, SCREEN_Y/2f);
         for (int y = 0; y < map.length; y++) {
             for (int x = 0; x < map[y].length; x++) {

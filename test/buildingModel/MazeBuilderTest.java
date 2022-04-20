@@ -25,10 +25,10 @@ class MazeBuilderTest {
                 new boolean[]{false, true, false},
                 new boolean[]{false, false, false}
         };
-        assertTrue(Arrays.deepEquals(mb.getMap(), startingMap));
+        assertTrue(Arrays.deepEquals(mb.getMapArray(), startingMap));
 
         mb.moveAndBuild();
-        assertFalse(Arrays.deepEquals(mb.getMap(), startingMap));
+        assertFalse(Arrays.deepEquals(mb.getMapArray(), startingMap));
     }
 
     @Test
@@ -47,7 +47,7 @@ class MazeBuilderTest {
                 {true, false, true, false, false},
                 {true, true, true, false, false}};
 
-        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
     }
 
     @Test
@@ -65,7 +65,7 @@ class MazeBuilderTest {
             {false, true, true},
             {true, true, true}
         };
-        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
     }
 
     @Test
@@ -82,7 +82,7 @@ class MazeBuilderTest {
                 {true, true, false},
                 {false, false, false}
         };
-        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
     }
 
     @Test
@@ -159,11 +159,11 @@ class MazeBuilderTest {
             mb.moveAndBuild();
         }
         boolean[][] expectedMap = {{true, true, false}};
-        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
 
         mb.moveAndBuild();
         expectedMap[0][2] = true;
-        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
     }
 
     @Test

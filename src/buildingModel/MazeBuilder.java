@@ -6,39 +6,40 @@ import java.awt.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class MazeBuilder{
+public class MazeBuilder {
     private final Point position;
-    private final int maze_x;
-    private final int maze_y;
+    private Maze maze;
     private final Guidance guidance;
     private final boolean[][] map;
     private final Stack<Point> path;
-    private final Queue<Wall> walls = new ArrayDeque<>();
     private Queue<BuildingStep> queue = new LinkedBlockingQueue<>();
-    private boolean isFinished = false;
+
+    public MazeBuilder(Maze maze, Guidance guidance) {
+        this(maze.getSizeX(), maze.getSizeY(), guidance);
+        this.maze = maze;
+    }
 
     public MazeBuilder(int mazeX, int mazeY, Guidance guidance, Queue<BuildingStep> buildingSteps) {
         this(mazeX, mazeY, guidance);
         this.queue = buildingSteps;
     }
 
-    public MazeBuilder(int maze_x, int maze_y, Guidance guidance) {
-        this.maze_x = maze_x;
-        this.maze_y = maze_y;
+    public MazeBuilder(int mazeX, int mazeY, Guidance guidance) {
         this.guidance = guidance;
         this.path = new Stack<>();
 
-        this.position = new Point(maze_x / 2, maze_y / 2);
-        this.map = new boolean[maze_y][maze_x];
+        this.position = new Point(mazeX / 2, mazeY / 2);
+        this.map = new boolean[mazeY][mazeX];
         map[position.y][position.x] = true;
+        this.maze = new MinimalMaze(mazeX, mazeY);
     }
 
-    public boolean[][] getMap() {
+    public boolean[][] getMapArray() {
         return map;
     }
 
     public Queue<Wall> getWalls() {
-        return walls;
+        return new LinkedList<>(maze.getWalls());
     }
 
     public void moveAndBuild() {
@@ -46,7 +47,7 @@ public class MazeBuilder{
         if (direction == null) {
             backtrack();
             if (path.empty()) {
-                isFinished = true;
+                maze.finish();
             }
             return;
         }
@@ -54,22 +55,25 @@ public class MazeBuilder{
         final Point nextPos = position.getLocation();
         nextPos.translate(direction.dx, direction.dy);
 
-        if (isInsideMaze(nextPos)) {
+        if (maze.isInside(nextPos)) {
             if (doesNotCross(nextPos)) {
                 path.push(position.getLocation());
                 position.setLocation(nextPos);
                 map[position.y][position.x] = true;
 
-                queue.add(new BuildingStep(position.getLocation(), direction, null));
+                final BuildingStep step = new BuildingStep(position.getLocation(), direction, null);
+                queue.add(step);
+                maze.addBuildingStep(step);
                 return;
             }
         }
         if (!isPreviousPosition(nextPos)) {
-            Wall wall = new Wall(position, nextPos);
-            walls.add(wall);
+            Wall wall = new Wall(position.getLocation(), nextPos.getLocation());
             queue.add(new BuildingStep(position.getLocation(), direction, wall));
+            maze.addBuildingStep(new BuildingStep(position.getLocation(), direction, wall));
         } else {
             queue.add(new BuildingStep(position.getLocation(), direction, null));
+            maze.addBuildingStep(new BuildingStep(position.getLocation(), direction, null));
         }
 
     }
@@ -78,11 +82,6 @@ public class MazeBuilder{
         if (!path.empty()) {
             position.setLocation(path.pop());
         }
-    }
-
-    private boolean isInsideMaze(Point point) {
-        return point.x >= 0 && point.x < maze_x &&
-                point.y >= 0 && point.y < maze_y;
     }
 
     private boolean doesNotCross(Point point) {
@@ -94,7 +93,7 @@ public class MazeBuilder{
     }
 
     public boolean isFinished() {
-        return this.isFinished;
+        return maze.isFinished();
     }
 
     public Optional<BuildingStep> nextBuildingStep() {
