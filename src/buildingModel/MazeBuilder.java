@@ -1,49 +1,54 @@
 package buildingModel;
 
 import buildingModel.guidance.Guidance;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class MazeBuilder {
     private final Point position;
-    private Maze maze;
+    private final Maze maze;
     private final Guidance guidance;
     private final boolean[][] map;
-    private final Stack<Point> path;
-    private Queue<BuildingStep> queue = new LinkedBlockingQueue<>();
+    private final Stack<Point> path = new Stack<>();
+    private final PathTracker pathTracker;
 
     public MazeBuilder(Maze maze, Guidance guidance) {
-        this(maze.getSizeX(), maze.getSizeY(), guidance);
-        this.maze = maze;
-    }
-
-    public MazeBuilder(int mazeX, int mazeY, Guidance guidance, Queue<BuildingStep> buildingSteps) {
-        this(mazeX, mazeY, guidance);
-        this.queue = buildingSteps;
-    }
-
-    public MazeBuilder(int mazeX, int mazeY, Guidance guidance) {
         this.guidance = guidance;
-        this.path = new Stack<>();
+        this.maze = maze;
+        if (maze instanceof PathTracker) {
+            this.pathTracker = (PathTracker) maze;
+        } else {
+            this.pathTracker = new PathTracker() {
+                @Override
+                public Point getPosition() {
+                    return null;
+                }
 
-        this.position = new Point(mazeX / 2, mazeY / 2);
-        this.map = new boolean[mazeY][mazeX];
+                @Override
+                public Direction getDirection() {
+                    return null;
+                }
+            };
+        }
+        this.position = getStartingPoint(maze);
+        this.map = new boolean[maze.getSizeY()][maze.getSizeX()];
         map[position.y][position.x] = true;
-        this.maze = new MinimalMaze(mazeX, mazeY);
+    }
+
+    @NotNull
+    private Point getStartingPoint(@NotNull Maze maze) {
+        return new Point(maze.getSizeX() / 2, maze.getSizeY() / 2);
     }
 
     public boolean[][] getMapArray() {
         return map;
     }
 
-    public Queue<Wall> getWalls() {
-        return new LinkedList<>(maze.getWalls());
-    }
-
     public void moveAndBuild() {
         Direction direction = guidance.nextDirection(position).orElse(null);
+
         if (direction == null) {
             backtrack();
             if (path.empty()) {
@@ -62,17 +67,14 @@ public class MazeBuilder {
                 map[position.y][position.x] = true;
 
                 final BuildingStep step = new BuildingStep(position.getLocation(), direction, null);
-                queue.add(step);
                 maze.addBuildingStep(step);
                 return;
             }
         }
         if (!isPreviousPosition(nextPos)) {
             Wall wall = new Wall(position.getLocation(), nextPos.getLocation());
-            queue.add(new BuildingStep(position.getLocation(), direction, wall));
             maze.addBuildingStep(new BuildingStep(position.getLocation(), direction, wall));
         } else {
-            queue.add(new BuildingStep(position.getLocation(), direction, null));
             maze.addBuildingStep(new BuildingStep(position.getLocation(), direction, null));
         }
 
@@ -94,9 +96,5 @@ public class MazeBuilder {
 
     public boolean isFinished() {
         return maze.isFinished();
-    }
-
-    public Optional<BuildingStep> nextBuildingStep() {
-        return Optional.ofNullable(queue.poll());
     }
 }

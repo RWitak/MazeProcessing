@@ -43,12 +43,9 @@ public class Wall {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Wall other) {
-            return (this.p1.equals(other.p1) & this.p2.equals(other.p2)) |
-                    (this.p1.equals(other.p2) & this.p2.equals(other.p1));
-        } else {
-            return false;
-        }
+        return (obj instanceof Wall other) &&
+                ((this.p1.equals(other.p1) && this.p2.equals(other.p2)) ||
+                (this.p1.equals(other.p2) && this.p2.equals(other.p1)));
     }
 
     @Override
