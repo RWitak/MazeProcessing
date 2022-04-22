@@ -4,7 +4,7 @@ import java.awt.*;
 import java.util.Stack;
 
 public class TrackingMaze extends MinimalMaze implements PathTracker {
-    public Stack<BuildingStep> buildingSteps = new Stack<>();
+    public final Stack<BuildingStep> buildingSteps = new Stack<>();
 
     public TrackingMaze(int sizeX, int sizeY) {
         super(sizeX, sizeY);

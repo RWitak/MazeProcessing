@@ -12,26 +12,10 @@ public class MazeBuilder {
     private final Guidance guidance;
     private final boolean[][] map;
     private final Stack<Point> path = new Stack<>();
-    private final PathTracker pathTracker;
 
     public MazeBuilder(Maze maze, Guidance guidance) {
         this.guidance = guidance;
         this.maze = maze;
-        if (maze instanceof PathTracker) {
-            this.pathTracker = (PathTracker) maze;
-        } else {
-            this.pathTracker = new PathTracker() {
-                @Override
-                public Point getPosition() {
-                    return null;
-                }
-
-                @Override
-                public Direction getDirection() {
-                    return null;
-                }
-            };
-        }
         this.position = getStartingPoint(maze);
         this.map = new boolean[maze.getSizeY()][maze.getSizeX()];
         map[position.y][position.x] = true;
