@@ -15,7 +15,6 @@ public class MinimalMaze implements Maze {
         this.walls = new LinkedHashSet<>();
     }
 
-    @Override
     public Collection<Wall> getWalls() {
         return walls;
     }

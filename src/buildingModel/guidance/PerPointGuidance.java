@@ -1,6 +1,7 @@
 package buildingModel.guidance;
 
 import buildingModel.Direction;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -13,7 +14,7 @@ import java.util.Optional;
  */
 public class PerPointGuidance implements Guidance {
     protected final HashMap<Point, Iterator<Direction>> pointListMap = new HashMap<>();
-    private final Iterable<Direction> directionsPerPoint;
+    protected final Iterable<Direction> directionsPerPoint;
 
     public PerPointGuidance(Iterable<Direction> directionsPerPoint) {
         this.directionsPerPoint = directionsPerPoint;
@@ -22,11 +23,16 @@ public class PerPointGuidance implements Guidance {
     @Override
     public Optional<Direction> nextDirection(Point position) {
         if (!pointListMap.containsKey(position)) {
-            pointListMap.put(position.getLocation(), directionsPerPoint.iterator());
+            pointListMap.put(position.getLocation(), getDirectionIterator());
         }
         if (pointListMap.get(position).hasNext()) {
             return Optional.of(pointListMap.get(position).next());
         }
         return Optional.empty();
+    }
+
+    @NotNull
+    protected Iterator<Direction> getDirectionIterator() {
+        return directionsPerPoint.iterator();
     }
 }

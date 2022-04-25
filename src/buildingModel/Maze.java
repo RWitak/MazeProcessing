@@ -1,10 +1,8 @@
 package buildingModel;
 
 import java.awt.*;
-import java.util.Collection;
 
 public interface Maze {
-    Collection<Wall> getWalls();
 
     boolean isFinished();
     boolean isInside(Point point);

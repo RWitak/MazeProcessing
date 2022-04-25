@@ -115,14 +115,17 @@ class MazeBuilderTest {
     }
 
     @Test
-    void noWallBehindSelf() {
-        final List<Direction> directions = List.of(WEST, EAST);
-        final TrackingMaze maze = new TrackingMaze(3, 1);
+    void ignoresDirectionIfSameAsBacktracking() {
+        final List<Direction> directions = List.of(WEST, EAST, SOUTH);
+        final TrackingMaze maze = new TrackingMaze(3, 3);
         mb = new MazeBuilder(maze, new SequentialGuidance(directions));
-        for (int i = 0; i < directions.size(); i++) {
-            mb.moveAndBuild();
-        }
 
+        mb.moveAndBuild();
+        assertEquals(new Point(0, 1), maze.getPosition());
+        mb.moveAndBuild();
+        assertEquals(new Point(0, 1), maze.getPosition());
+        mb.moveAndBuild();
+        assertEquals(new Point(0, 2), maze.getPosition());
         assertTrue(maze.getWalls().isEmpty());
     }
 
