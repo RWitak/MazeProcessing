@@ -1,6 +1,7 @@
 package buildingModel.guidance;
 
 import buildingModel.*;
+import buildingModel.maze.TrackingMaze;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 

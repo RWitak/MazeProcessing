@@ -3,6 +3,8 @@ package buildingModel;
 import buildingModel.guidance.Guidance;
 import buildingModel.guidance.PerPointGuidance;
 import buildingModel.guidance.SequentialGuidance;
+import buildingModel.maze.TrackingMaze;
+import buildingModel.wall.Wall;
 import org.junit.jupiter.api.Test;
 
 import java.awt.*;

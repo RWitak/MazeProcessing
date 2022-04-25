@@ -1,4 +1,5 @@
-import buildingModel.Wall;
+package buildingModel.wall;
+
 import lombok.NonNull;
 
 import java.awt.*;

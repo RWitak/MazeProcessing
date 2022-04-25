@@ -1,4 +1,4 @@
-package buildingModel;
+package buildingModel.wall;
 
 import java.awt.*;
 

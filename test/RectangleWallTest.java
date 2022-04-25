@@ -1,4 +1,5 @@
-import buildingModel.Wall;
+import buildingModel.wall.RectangleWall;
+import buildingModel.wall.Wall;
 import org.junit.jupiter.api.Test;
 
 import java.awt.geom.Rectangle2D;

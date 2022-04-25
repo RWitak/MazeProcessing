@@ -1,6 +1,8 @@
 package buildingModel;
 
+import buildingModel.wall.Wall;
 import buildingModel.guidance.Guidance;
+import buildingModel.maze.Maze;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;

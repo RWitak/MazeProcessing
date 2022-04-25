@@ -1,4 +1,6 @@
-package buildingModel;
+package buildingModel.maze;
+
+import buildingModel.BuildingStep;
 
 import java.awt.*;
 

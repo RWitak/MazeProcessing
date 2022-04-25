@@ -1,5 +1,6 @@
 package buildingModel;
 
+import buildingModel.wall.Wall;
 import org.junit.jupiter.api.Test;
 
 import java.awt.*;
