@@ -3,3 +3,4 @@
 /.gradle/
 /.idea/
 /MazeProcessing.iml
+/target/
