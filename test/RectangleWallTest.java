@@ -57,4 +57,13 @@ class RectangleWallTest {
                 new float[]{rect.x, rect.y, rect.x + rect.width, rect.y + rect.height}
         );
     }
+
+    @Test
+    void tellsIfHorizontal() {
+        final Wall wallH = new Wall(30, 2, 31, 2);
+        final Wall wallV = new Wall(-3, 0, -3, -1);
+
+        assertTrue(new RectangleWall(wallH).isHorizontal());
+        assertFalse(new RectangleWall(wallV).isHorizontal());
+    }
 }
