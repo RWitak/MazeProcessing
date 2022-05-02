@@ -1,10 +1,12 @@
 import buildingModel.BuildingStep;
 import buildingModel.MazeBuilder;
-import buildingModel.guidance.PerPointGuidance;
 import buildingModel.guidance.RandomGuidance;
 import buildingModel.maze.TrackingMaze;
 import buildingModel.wall.RectangleWall;
 import buildingModel.wall.Wall;
+import pShapes.Builder;
+import pShapes.Ground;
+import pShapes.VerticalWall;
 import peasy.PeasyCam;
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -20,8 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static buildingModel.Direction.*;
 
 public class ProcessingMain extends PApplet {
-    private int SCALE_X, SCALE_Y, MAZE_X, MAZE_Y;
-    private float WALL_WIDTH;
+    private int SCALE, MAZE_X, MAZE_Y, WALL_HEIGHT, WALL_WIDTH;
 
     private MazeBuilder mazeBuilder;
     private TrackingMaze maze;
@@ -31,8 +32,14 @@ public class ProcessingMain extends PApplet {
 
     private PeasyCam cam;
 
-    private PShape hedgeVertical;
+    private PShape wallVertical;
+    private PShape ground;
+    private PShape builder;
 
+
+    public static void main(String[] args) {
+        PApplet.main("ProcessingMain", args);
+    }
 
     public void settings() {
         final InputStream config = Thread
@@ -45,100 +52,108 @@ public class ProcessingMain extends PApplet {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         final int SCREEN_X, SCREEN_Y;
-        SCREEN_X = Integer.parseInt(properties.getProperty("screen.x"));
-        SCREEN_Y = Integer.parseInt(properties.getProperty("screen.y"));
+        SCREEN_X = Integer.parseInt(properties.getProperty("screen.x", String.valueOf(displayWidth)));
+        SCREEN_Y = Integer.parseInt(properties.getProperty("screen.y", String.valueOf(displayHeight)));
         size(SCREEN_X, SCREEN_Y, P3D);
 
-        MAZE_X = Integer.parseInt(properties.getProperty("maze.x"));
-        MAZE_Y = Integer.parseInt(properties.getProperty("maze.y"));
-        SCALE_X = Integer.parseInt(properties.getProperty("scale.x"));
-        SCALE_Y = Integer.parseInt(properties.getProperty("scale.y"));
-        maze = new TrackingMaze(MAZE_X, MAZE_Y);
+        MAZE_X = Integer.parseInt(properties.getProperty("maze.x", "20"));
+        MAZE_Y = Integer.parseInt(properties.getProperty("maze.y", "20"));
+        SCALE = Integer.parseInt(properties.getProperty("scale", "10"));
 
-        WALL_WIDTH = Math.max(SCALE_X, SCALE_Y) / 3f;
+        maze = new TrackingMaze(MAZE_X, MAZE_Y);
+        mazeBuilder = new MazeBuilder(maze, new RandomGuidance(List.of(NORTH, SOUTH, WEST, EAST)));
+
+        WALL_HEIGHT = Integer.parseInt(properties.getProperty("wall.height", String.valueOf(SCALE)));
+        WALL_WIDTH = Integer.parseInt(properties.getProperty("wall.width", String.valueOf(SCALE / 3)));
     }
 
     public void setup() {
         position.setLocation(MAZE_X / 2f, MAZE_Y / 2f);
 
-        final PerPointGuidance guidance = new RandomGuidance(List.of(NORTH, SOUTH, WEST, EAST));
-        mazeBuilder = new MazeBuilder(maze, guidance);
-
-        this.cam = new PeasyCam(this,
-                MAZE_X * SCALE_X / 2f,
-                MAZE_Y * SCALE_Y / 2f,
+        cam = new PeasyCam(this,
+                MAZE_X * SCALE / 2f,
+                MAZE_Y * SCALE / 2f,
                 0,
-                sqrt(sq(MAZE_X * SCALE_X) + sq(MAZE_Y * SCALE_Y)) / 2);
+                sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2);
         cam.rotateX(-PI/6);
         cam.setSuppressRollRotationMode();
 
-        PImage img = loadImage("hedge.png");
-        hedgeVertical = VerticalHedge.getPShape(SCALE_X, SCALE_Y, WALL_WIDTH, this, img);
+        final PImage imageHedge = loadImage("hedge.png");
+        final PImage imageGround = loadImage("gravel_dark.png");
+
+        wallVertical = VerticalWall.getPShape(SCALE, WALL_WIDTH, WALL_HEIGHT, this, imageHedge);
+        ground = Ground.getPShape(MAZE_X, MAZE_Y, SCALE, WALL_HEIGHT, this, imageGround);
+        builder = Builder.getPShape(SCALE, WALL_WIDTH, this);
     }
 
     public void draw() {
-        pointLight(255, 255, 0, MAZE_X * SCALE_X / 2f, 0, 50);
-        pointLight(0, 255, 255, 0, MAZE_Y * SCALE_Y, 50);
-        directionalLight(255, 0, 255, 0, 0, -1);
-        background(0, 22, 11);
-
-        cam.lookAt(position.x * SCALE_X,
-                position.y * SCALE_Y,
-                0);
         thread("build");
+
+        background(0, 22, 11);
+        pointLight(251, 222, 26, MAZE_X * SCALE / 2f, MAZE_Y * SCALE / 2f, 160);
+        cam.lookAt((position.x + .5f) * SCALE,
+                (position.y + .5f) * SCALE,
+                0);
+
+        drawGround();
         drawBuilder();
         for (RectangleWall rectangleWall : wallQueue) {
             drawWall(rectangleWall);
         }
     }
 
+    /**
+     * Build maze asynchronously in background.
+     */
+    @SuppressWarnings("unused") // used as stringified parameter to thread() in draw()
+    public void build() {
+        if (maze.isFinished()) {
+            return;
+        }
+
+        mazeBuilder.moveAndBuild();
+        if (maze.buildingSteps.empty()) {
+            return;
+        }
+        BuildingStep bs = maze.buildingSteps.pop();
+
+        final Wall wall = bs.wall();
+        if (wall != null) {
+            RectangleWall rw = new RectangleWall(wall, SCALE, SCALE);
+            wallQueue.add(rw);
+        }
+
+        final Point currPosition = bs.position();
+        if (currPosition != null) {
+            position.setLocation(currPosition);
+        }
+    }
+
+    private void drawGround() {
+        push();
+        shape(ground);
+        pop();
+    }
+
     private void drawBuilder() {
         push();
-        translate(SCALE_X * (position.x + .5f), SCALE_Y * (position.y + .5f));
-        fill(20, 45, 220);
-        shininess(1f);
-        sphere(Math.min(SCALE_X, SCALE_Y) / 2f - WALL_WIDTH);
+        translate(SCALE * (position.x + .5f), SCALE * (position.y + .5f));
+        emissive(0, 0, 255);
+        shape(builder);
         pop();
     }
 
-    public static void main(String[] args) {
-        PApplet.main("ProcessingMain", args);
-    }
-
-    public void drawWall(RectangleWall rectangle) {
+    public void drawWall(RectangleWall rectWall) {
         push();
-        translate((float) rectangle.getRect().getCenterX() + SCALE_X / 2f,
-                (float) rectangle.getRect().getCenterY() + SCALE_Y / 2f);
+        translate((float) rectWall.getRect().getCenterX() + SCALE / 2f,
+                (float) rectWall.getRect().getCenterY() + SCALE / 2f);
 
-        if (rectangle.isHorizontal()) {
+        if (rectWall.isHorizontal()) {
             rotateZ(PI / 2);
         }
-        shape(hedgeVertical);
-
+        shape(wallVertical);
         pop();
-    }
-
-    @SuppressWarnings("unused")
-    public void build() {
-        if (!maze.isFinished()) {
-            mazeBuilder.moveAndBuild();
-            if (maze.buildingSteps.empty()) {
-                return;
-            }
-
-            BuildingStep bs = maze.buildingSteps.pop();
-            final Wall wall = bs.wall();
-
-            if (wall != null) {
-                RectangleWall rw = new RectangleWall(wall, SCALE_X, SCALE_Y);
-                wallQueue.add(rw);
-            }
-
-            final Point currPosition = bs.position();
-            if (currPosition != null) {
-                position.setLocation(currPosition);
-            }
-        }
     }
 }

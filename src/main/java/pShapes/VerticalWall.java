@@ -1,27 +1,29 @@
+package pShapes;
+
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
 
-public class VerticalHedge extends PShape {
-    public static PShape getPShape(float SCALE_X, float SCALE_Y, float WALL_WIDTH, PApplet caller, PImage img) {
+public class VerticalWall extends PShape {
+    public static PShape getPShape(int scale, int wallWidth, int wallHeight, PApplet caller, PImage img) {
         caller.push();
         caller.fill(255);
         caller.noStroke();
+        caller.emissive(55);
         caller.textureMode(NORMAL);
-        PShape hedgeVertical = caller.createShape(GROUP);
+        PShape wallVertical = caller.createShape(GROUP);
 
-        final float outerLeft = -SCALE_X / 2f;
-        final float middleLeft = -(SCALE_X - WALL_WIDTH) / 2f;
-        final float middleRight = (SCALE_X - WALL_WIDTH) / 2f;
-        final float outerRight = SCALE_X / 2f;
+        final float outerLeft = -scale / 2f;
+        final float middleLeft = -(scale - wallWidth) / 2f;
+        final float middleRight = (scale - wallWidth) / 2f;
+        final float outerRight = scale / 2f;
 
-        final float backY = WALL_WIDTH / 2f;
+        final float backY = wallWidth / 2f;
         final float midY = 0f;
-        final float frontY = -WALL_WIDTH / 2f;
+        final float frontY = -wallWidth / 2f;
 
-        final float height = (SCALE_X + SCALE_Y) / 2f;
-        final float topZ = height / 2f;
-        final float bottomZ = -height / 2f;
+        final float topZ = wallHeight / 2f;
+        final float bottomZ = -wallHeight / 2f;
 
         PShape bottom = caller.createShape();
         bottom.beginShape(QUAD_STRIP);
@@ -64,11 +66,12 @@ public class VerticalHedge extends PShape {
         hull.texture(img);
         hull.endShape();
 
-        hedgeVertical.addChild(top);
-        hedgeVertical.addChild(bottom);
-        hedgeVertical.addChild(hull);
+        wallVertical.addChild(top);
+//        do not draw bottom when using ground to avoid clipping glitch
+//        wallVertical.addChild(bottom);
+        wallVertical.addChild(hull);
         caller.pop();
 
-        return hedgeVertical;
+        return wallVertical;
     }
 }
