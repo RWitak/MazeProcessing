@@ -8,10 +8,10 @@ public class Ground extends PShape {
 
     public static PShape getPShape(int mazeX, int mazeY, int scale, int wallHeight, PApplet pApplet, PImage img) {
         pApplet.push();
-        pApplet.fill(255);
+        pApplet.fill(0);
         pApplet.textureMode(NORMAL);
         pApplet.textureWrap(REPEAT);
-        pApplet.emissive(155);
+        pApplet.emissive(55);
 
         PShape ground = pApplet.createShape();
         ground.beginShape();

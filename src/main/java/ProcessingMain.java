@@ -4,7 +4,7 @@ import buildingModel.guidance.RandomGuidance;
 import buildingModel.maze.TrackingMaze;
 import buildingModel.wall.RectangleWall;
 import buildingModel.wall.Wall;
-import pShapes.Builder;
+import pShapes.BuilderSprite;
 import pShapes.Ground;
 import pShapes.VerticalWall;
 import peasy.PeasyCam;
@@ -34,7 +34,7 @@ public class ProcessingMain extends PApplet {
 
     private PShape wallVertical;
     private PShape ground;
-    private PShape builder;
+    private PShape builderSprite;
 
 
     public static void main(String[] args) {
@@ -76,7 +76,7 @@ public class ProcessingMain extends PApplet {
                 MAZE_X * SCALE / 2f,
                 MAZE_Y * SCALE / 2f,
                 0,
-                sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2);
+                2 * sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2);
         cam.rotateX(-PI/6);
         cam.setSuppressRollRotationMode();
 
@@ -85,14 +85,37 @@ public class ProcessingMain extends PApplet {
 
         wallVertical = VerticalWall.getPShape(SCALE, WALL_WIDTH, WALL_HEIGHT, this, imageHedge);
         ground = Ground.getPShape(MAZE_X, MAZE_Y, SCALE, WALL_HEIGHT, this, imageGround);
-        builder = Builder.getPShape(SCALE, WALL_WIDTH, this);
+        builderSprite = BuilderSprite.getPShape(SCALE, WALL_WIDTH, this);
+        builderSprite.translate(0, 0, -WALL_HEIGHT / 2f);
     }
 
     public void draw() {
         thread("build");
 
         background(0, 22, 11);
-        pointLight(251, 222, 26, MAZE_X * SCALE / 2f, MAZE_Y * SCALE / 2f, 160);
+        noLights();
+        final float radius = sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2f;
+        pointLight(89, 89, 0,
+                radius * (cos(radians(millis() / 30f % 360))),
+                radius * (sin(radians(millis() / 30f % 360))),
+                radius
+                );
+        pointLight(0, 89, 89,
+                -radius * (cos(radians(millis() / 30f % 360))),
+                -radius * (sin(radians(millis() / 30f % 360))),
+                radius
+                );
+        pointLight(89, 0, 0,
+                -radius * (cos(radians(millis() / 30f % 360))),
+                radius * (sin(radians(millis() / 30f % 360))),
+                radius
+                );
+        pointLight(0, 89,0,
+                radius * (cos(radians(millis() / 30f % 360))),
+                -radius * (sin(radians(millis() / 30f % 360))),
+                radius
+                );
+//        pointLight(251, 222, 26, MAZE_X * SCALE / 2f, MAZE_Y * SCALE / 2f, 160);
         cam.lookAt((position.x + .5f) * SCALE,
                 (position.y + .5f) * SCALE,
                 0);
@@ -141,7 +164,7 @@ public class ProcessingMain extends PApplet {
         push();
         translate(SCALE * (position.x + .5f), SCALE * (position.y + .5f));
         emissive(0, 0, 255);
-        shape(builder);
+        shape(builderSprite);
         pop();
     }
 
