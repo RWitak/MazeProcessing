@@ -34,7 +34,6 @@ public class ProcessingMain extends PApplet {
 
     private PShape wallVertical;
     private PShape ground;
-    private PShape builderSprite;
 
 
     public static void main(String[] args) {
@@ -77,16 +76,15 @@ public class ProcessingMain extends PApplet {
                 MAZE_Y * SCALE / 2f,
                 0,
                 2 * sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2);
-        cam.rotateX(-PI/6);
-        cam.setSuppressRollRotationMode();
+//        cam.rotateX(-PI/6);
+        cam.setFreeRotationMode();
+//        cam.setYawRotationMode();
 
         final PImage imageHedge = loadImage("hedge.png");
         final PImage imageGround = loadImage("gravel_dark.png");
 
         wallVertical = VerticalWall.getPShape(SCALE, WALL_WIDTH, WALL_HEIGHT, this, imageHedge);
         ground = Ground.getPShape(MAZE_X, MAZE_Y, SCALE, WALL_HEIGHT, this, imageGround);
-        builderSprite = BuilderSprite.getPShape(SCALE, WALL_WIDTH, this);
-        builderSprite.translate(0, 0, -WALL_HEIGHT / 2f);
     }
 
     public void draw() {
@@ -110,14 +108,16 @@ public class ProcessingMain extends PApplet {
                 radius * (sin(radians(millis() / 30f % 360))),
                 radius
                 );
+        directionalLight(100, 100, 100, 0, 0, -1);
+        lightSpecular(55, 55, 55);
         pointLight(0, 89,0,
                 radius * (cos(radians(millis() / 30f % 360))),
                 -radius * (sin(radians(millis() / 30f % 360))),
                 radius
                 );
 //        pointLight(251, 222, 26, MAZE_X * SCALE / 2f, MAZE_Y * SCALE / 2f, 160);
-        cam.lookAt((position.x + .5f) * SCALE,
-                (position.y + .5f) * SCALE,
+        cam.lookAt((position.x) * SCALE,
+                (position.y) * SCALE,
                 0);
 
         drawGround();
@@ -162,8 +162,9 @@ public class ProcessingMain extends PApplet {
 
     private void drawBuilder() {
         push();
-        translate(SCALE * (position.x + .5f), SCALE * (position.y + .5f));
-        emissive(0, 0, 255);
+        PShape builderSprite = BuilderSprite.getPShape(SCALE, WALL_WIDTH, this);
+        builderSprite.translate(SCALE * (position.x + .5f), SCALE * (position.y + .5f));
+        builderSprite.translate(0, 0, -WALL_HEIGHT / 2f);
         shape(builderSprite);
         pop();
     }
