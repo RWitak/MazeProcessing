@@ -1,5 +1,6 @@
 package pShapes;
 
+import buildingModel.Direction;
 import processing.core.PApplet;
 import processing.core.PShape;
 
@@ -58,7 +59,7 @@ public class BuilderSprite extends PShape {
         proc.fill(255);
         proc.emissive(0, 26, 51);
         final PShape smallBall = proc.createShape(SPHERE,smallRadius);
-//        smallBall.scale(1,1, snowCompression);
+        // no compression for top ball as it messes with hat fit.
         smallBall.translate(0,0,(bigRadius + middleRadius) * snowCompression);
         snowman.addChild(smallBall);
         proc.pop();
@@ -145,4 +146,16 @@ public class BuilderSprite extends PShape {
         return snowman;
     }
 
+    public static PShape getDirectionalPShape(int scale, int wallWidth, Direction direction, PApplet proc) {
+        final PShape pShape = getPShape(scale, wallWidth, proc);
+        final float angle;
+        switch (direction) {
+            case EAST -> angle = -HALF_PI;
+            case NORTH -> angle = PI;
+            case WEST -> angle = HALF_PI;
+            default -> angle = 0;
+        }
+        pShape.rotateZ(angle);
+        return pShape;
+    }
 }

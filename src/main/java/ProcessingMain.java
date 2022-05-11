@@ -1,4 +1,5 @@
 import buildingModel.BuildingStep;
+import buildingModel.Direction;
 import buildingModel.MazeBuilder;
 import buildingModel.guidance.RandomGuidance;
 import buildingModel.maze.TrackingMaze;
@@ -28,6 +29,7 @@ public class ProcessingMain extends PApplet {
     private TrackingMaze maze;
 
     private final Point position = new Point();
+    private Direction direction = NORTH;
     private final LinkedBlockingQueue<RectangleWall> wallQueue = new LinkedBlockingQueue<>();
 
     private PeasyCam cam;
@@ -75,10 +77,9 @@ public class ProcessingMain extends PApplet {
                 MAZE_X * SCALE / 2f,
                 MAZE_Y * SCALE / 2f,
                 0,
-                2 * sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2);
-//        cam.rotateX(-PI/6);
+                sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2);
+        cam.rotateX(-PI/3);
         cam.setFreeRotationMode();
-//        cam.setYawRotationMode();
 
         final PImage imageHedge = loadImage("hedge.png");
         final PImage imageGround = loadImage("gravel_dark.png");
@@ -88,7 +89,7 @@ public class ProcessingMain extends PApplet {
     }
 
     public void draw() {
-        thread("build");
+        build();
 
         background(0, 22, 11);
         noLights();
@@ -115,7 +116,6 @@ public class ProcessingMain extends PApplet {
                 -radius * (sin(radians(millis() / 30f % 360))),
                 radius
                 );
-//        pointLight(251, 222, 26, MAZE_X * SCALE / 2f, MAZE_Y * SCALE / 2f, 160);
         cam.lookAt((position.x) * SCALE,
                 (position.y) * SCALE,
                 0);
@@ -127,10 +127,6 @@ public class ProcessingMain extends PApplet {
         }
     }
 
-    /**
-     * Build maze asynchronously in background.
-     */
-    @SuppressWarnings("unused") // used as stringified parameter to thread() in draw()
     public void build() {
         if (maze.isFinished()) {
             return;
@@ -152,6 +148,11 @@ public class ProcessingMain extends PApplet {
         if (currPosition != null) {
             position.setLocation(currPosition);
         }
+
+        final Direction direction = bs.direction();
+        if (direction != null) {
+            this.direction = direction;
+        }
     }
 
     private void drawGround() {
@@ -162,7 +163,7 @@ public class ProcessingMain extends PApplet {
 
     private void drawBuilder() {
         push();
-        PShape builderSprite = BuilderSprite.getPShape(SCALE, WALL_WIDTH, this);
+        PShape builderSprite = BuilderSprite.getDirectionalPShape(SCALE, WALL_WIDTH, this.direction, this);
         builderSprite.translate(SCALE * (position.x + .5f), SCALE * (position.y + .5f));
         builderSprite.translate(0, 0, -WALL_HEIGHT / 2f);
         shape(builderSprite);
