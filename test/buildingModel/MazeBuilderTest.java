@@ -123,7 +123,7 @@ class MazeBuilderTest {
         mb = new MazeBuilder(maze, new SequentialGuidance(directions));
 
         mb.moveAndBuild();
-        assertEquals(new Point(0, 1), maze.getPosition());
+        assertEquals(new Point(0, 1), mb.getPosition());
         mb.moveAndBuild();
         assertEquals(new Point(0, 1), maze.getPosition());
         mb.moveAndBuild();

@@ -16,6 +16,7 @@ import processing.core.PShape;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -23,15 +24,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static buildingModel.Direction.*;
 
 public class ProcessingMain extends PApplet {
+    private final Point position = new Point();
+    private final LinkedBlockingQueue<RectangleWall> wallQueue = new LinkedBlockingQueue<>();
+    private boolean SHOW_PATH;
     private int SCALE, MAZE_X, MAZE_Y, WALL_HEIGHT, WALL_WIDTH;
-
     private MazeBuilder mazeBuilder;
     private TrackingMaze maze;
-
-    private final Point position = new Point();
     private Direction direction = NORTH;
-    private final LinkedBlockingQueue<RectangleWall> wallQueue = new LinkedBlockingQueue<>();
-
     private PeasyCam cam;
 
     private PShape wallVertical;
@@ -68,6 +67,8 @@ public class ProcessingMain extends PApplet {
 
         WALL_HEIGHT = Integer.parseInt(properties.getProperty("wall.height", String.valueOf(SCALE)));
         WALL_WIDTH = Integer.parseInt(properties.getProperty("wall.width", String.valueOf(SCALE / 3)));
+
+        SHOW_PATH = Boolean.parseBoolean(properties.getProperty("path.show", String.valueOf(true)));
     }
 
     public void setup() {
@@ -91,67 +92,62 @@ public class ProcessingMain extends PApplet {
     public void draw() {
         build();
 
-        background(0, 22, 11);
+        setLighting();
+        setCamera();
+        drawScenery();
+    }
+
+    private void setCamera() {
+        cam.lookAt((position.x) * SCALE,
+                (position.y) * SCALE,
+                0);
+    }
+
+    private void setLighting() {
         noLights();
+
         final float radius = sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2f;
+
         pointLight(89, 89, 0,
                 radius * (cos(radians(millis() / 30f % 360))),
                 radius * (sin(radians(millis() / 30f % 360))),
                 radius
                 );
+
         pointLight(0, 89, 89,
                 -radius * (cos(radians(millis() / 30f % 360))),
                 -radius * (sin(radians(millis() / 30f % 360))),
                 radius
                 );
+
         pointLight(89, 0, 0,
                 -radius * (cos(radians(millis() / 30f % 360))),
                 radius * (sin(radians(millis() / 30f % 360))),
                 radius
                 );
+
         directionalLight(100, 100, 100, 0, 0, -1);
+
         lightSpecular(55, 55, 55);
         pointLight(0, 89,0,
                 radius * (cos(radians(millis() / 30f % 360))),
                 -radius * (sin(radians(millis() / 30f % 360))),
                 radius
                 );
-        cam.lookAt((position.x) * SCALE,
-                (position.y) * SCALE,
-                0);
+    }
+
+    private void drawScenery() {
+        background(0, 22, 11);
 
         drawGround();
         drawBuilder();
+
         for (RectangleWall rectangleWall : wallQueue) {
             drawWall(rectangleWall);
         }
-    }
 
-    public void build() {
-        if (maze.isFinished()) {
-            return;
-        }
-
-        mazeBuilder.moveAndBuild();
-        if (maze.buildingSteps.empty()) {
-            return;
-        }
-        BuildingStep bs = maze.buildingSteps.pop();
-
-        final Wall wall = bs.wall();
-        if (wall != null) {
-            RectangleWall rw = new RectangleWall(wall, SCALE, SCALE);
-            wallQueue.add(rw);
-        }
-
-        final Point currPosition = bs.position();
-        if (currPosition != null) {
-            position.setLocation(currPosition);
-        }
-
-        final Direction direction = bs.direction();
-        if (direction != null) {
-            this.direction = direction;
+        if (SHOW_PATH) {
+            drawPath();
         }
     }
 
@@ -180,5 +176,50 @@ public class ProcessingMain extends PApplet {
         }
         shape(wallVertical);
         pop();
+    }
+
+    private void drawPath() {
+        Iterator<Point> waypoints = mazeBuilder.getPath().iterator();
+        while (waypoints.hasNext()) {
+            Point p = waypoints.next();
+            push();
+            noStroke();
+            if (waypoints.hasNext()) {
+                fill(150);
+            } else {
+                fill(255, 0, 0);
+            }
+            translate((float) ((p.getX() + .5f) * SCALE), (float) (p.getY() + .5f) * SCALE);
+            sphere(SCALE / 10f);
+            pop();
+        }
+    }
+
+    public void build() {
+        if (maze.isFinished()) {
+            return;
+        }
+
+        mazeBuilder.moveAndBuild();
+        if (maze.buildingSteps.empty()) {
+            return;
+        }
+
+        BuildingStep step = maze.buildingSteps.pop();
+        final Wall wall = step.wall();
+        if (wall != null) {
+            RectangleWall rw = new RectangleWall(wall, SCALE, SCALE);
+            wallQueue.add(rw);
+        }
+
+        final Point currPosition = step.position().getLocation();
+        if (currPosition != null) {
+            position.setLocation(currPosition);
+        }
+
+        final Direction direction = step.direction();
+        if (direction != null) {
+            this.direction = direction;
+        }
     }
 }

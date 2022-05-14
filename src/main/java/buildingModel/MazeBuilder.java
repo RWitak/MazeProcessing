@@ -13,6 +13,11 @@ public class MazeBuilder {
     private final Maze maze;
     private final Guidance guidance;
     private final boolean[][] map;
+
+    public Stack<Point> getPath() {
+        return path;
+    }
+
     private final Stack<Point> path = new Stack<>();
 
     public MazeBuilder(Maze maze, Guidance guidance) {
@@ -63,7 +68,6 @@ public class MazeBuilder {
         } else {
             maze.addBuildingStep(new BuildingStep(position.getLocation(), direction, null));
         }
-
     }
 
     private void backtrack() {
@@ -82,5 +86,9 @@ public class MazeBuilder {
 
     public boolean isFinished() {
         return maze.isFinished();
+    }
+
+    public Point getPosition() {
+        return position;
     }
 }
