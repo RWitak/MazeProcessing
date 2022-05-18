@@ -1,10 +1,7 @@
-import buildingModel.BuildingStep;
-import buildingModel.Direction;
 import buildingModel.MazeBuilder;
 import buildingModel.guidance.RandomGuidance;
 import buildingModel.maze.TrackingMaze;
 import buildingModel.wall.RectangleWall;
-import buildingModel.wall.Wall;
 import pShapes.BuilderSprite;
 import pShapes.Ground;
 import pShapes.VerticalWall;
@@ -13,7 +10,7 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
 
-import java.awt.*;
+import java.awt.Point;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -24,13 +21,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static buildingModel.Direction.*;
 
 public class ProcessingMain extends PApplet {
-    private final Point position = new Point();
     private final LinkedBlockingQueue<RectangleWall> wallQueue = new LinkedBlockingQueue<>();
     private boolean SHOW_PATH;
     private int SCALE, MAZE_X, MAZE_Y, WALL_HEIGHT, WALL_WIDTH;
-    private MazeBuilder mazeBuilder;
-    private TrackingMaze maze;
-    private Direction direction = NORTH;
+    private BuildingModel model;
     private PeasyCam cam;
 
     private PShape wallVertical;
@@ -62,8 +56,11 @@ public class ProcessingMain extends PApplet {
         MAZE_Y = Integer.parseInt(properties.getProperty("maze.y", "20"));
         SCALE = Integer.parseInt(properties.getProperty("scale", "10"));
 
-        maze = new TrackingMaze(MAZE_X, MAZE_Y);
-        mazeBuilder = new MazeBuilder(maze, new RandomGuidance(List.of(NORTH, SOUTH, WEST, EAST)));
+        TrackingMaze maze = new TrackingMaze(MAZE_X, MAZE_Y);
+        final Point startingPoint = new Point(MAZE_X / 2, MAZE_Y / 2);
+        final RandomGuidance guidance = new RandomGuidance(List.of(NORTH, SOUTH, WEST, EAST));
+        MazeBuilder mazeBuilder = new MazeBuilder(maze, guidance, startingPoint);
+        model = new BasicBuildingModel(mazeBuilder, maze, SCALE, wallQueue);
 
         WALL_HEIGHT = Integer.parseInt(properties.getProperty("wall.height", String.valueOf(SCALE)));
         WALL_WIDTH = Integer.parseInt(properties.getProperty("wall.width", String.valueOf(SCALE / 3)));
@@ -72,8 +69,6 @@ public class ProcessingMain extends PApplet {
     }
 
     public void setup() {
-        position.setLocation(MAZE_X / 2f, MAZE_Y / 2f);
-
         cam = new PeasyCam(this,
                 MAZE_X * SCALE / 2f,
                 MAZE_Y * SCALE / 2f,
@@ -90,7 +85,7 @@ public class ProcessingMain extends PApplet {
     }
 
     public void draw() {
-        build();
+        model.build();
 
         setLighting();
         setCamera();
@@ -98,6 +93,7 @@ public class ProcessingMain extends PApplet {
     }
 
     private void setCamera() {
+        Point position = model.getPosition();
         cam.lookAt((position.x) * SCALE,
                 (position.y) * SCALE,
                 0);
@@ -158,8 +154,10 @@ public class ProcessingMain extends PApplet {
     }
 
     private void drawBuilder() {
+        Point position = model.getPosition();
+        
         push();
-        PShape builderSprite = BuilderSprite.getDirectionalPShape(SCALE, WALL_WIDTH, this.direction, this);
+        PShape builderSprite = BuilderSprite.getDirectionalPShape(SCALE, WALL_WIDTH, model.getDirection(), this);
         builderSprite.translate(SCALE * (position.x + .5f), SCALE * (position.y + .5f));
         builderSprite.translate(0, 0, -WALL_HEIGHT / 2f);
         shape(builderSprite);
@@ -179,7 +177,7 @@ public class ProcessingMain extends PApplet {
     }
 
     private void drawPath() {
-        Iterator<Point> waypoints = mazeBuilder.getPath().iterator();
+        Iterator<Point> waypoints = model.getPath().iterator();
         while (waypoints.hasNext()) {
             Point p = waypoints.next();
             push();
@@ -192,34 +190,6 @@ public class ProcessingMain extends PApplet {
             translate((float) ((p.getX() + .5f) * SCALE), (float) (p.getY() + .5f) * SCALE);
             sphere(SCALE / 10f);
             pop();
-        }
-    }
-
-    public void build() {
-        if (maze.isFinished()) {
-            return;
-        }
-
-        mazeBuilder.moveAndBuild();
-        if (maze.buildingSteps.empty()) {
-            return;
-        }
-
-        BuildingStep step = maze.buildingSteps.pop();
-        final Wall wall = step.wall();
-        if (wall != null) {
-            RectangleWall rw = new RectangleWall(wall, SCALE, SCALE);
-            wallQueue.add(rw);
-        }
-
-        final Point currPosition = step.position().getLocation();
-        if (currPosition != null) {
-            position.setLocation(currPosition);
-        }
-
-        final Direction direction = step.direction();
-        if (direction != null) {
-            this.direction = direction;
         }
     }
 }

@@ -26,10 +26,10 @@ class MazeBuilderTest {
                 new boolean[]{false, true, false},
                 new boolean[]{false, false, false}
         };
-        assertTrue(Arrays.deepEquals(mb.getMapArray(), startingMap));
+        assertTrue(Arrays.deepEquals(mb.getMap(), startingMap));
 
         mb.moveAndBuild();
-        assertFalse(Arrays.deepEquals(mb.getMapArray(), startingMap));
+        assertFalse(Arrays.deepEquals(mb.getMap(), startingMap));
     }
 
     @Test
@@ -49,7 +49,7 @@ class MazeBuilderTest {
                 {true, false, true, false, false},
                 {true, true, true, false, false}};
 
-        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
     }
 
     @Test
@@ -67,7 +67,7 @@ class MazeBuilderTest {
             {false, true, true},
             {true, true, true}
         };
-        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
     }
 
     @Test
@@ -84,7 +84,7 @@ class MazeBuilderTest {
                 {true, true, false},
                 {false, false, false}
         };
-        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
     }
 
     @Test
@@ -166,11 +166,11 @@ class MazeBuilderTest {
             mb.moveAndBuild();
         }
         boolean[][] expectedMap = {{true, true, false}};
-        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
 
         mb.moveAndBuild();
         expectedMap[0][2] = true;
-        assertTrue(Arrays.deepEquals(mb.getMapArray(), expectedMap));
+        assertTrue(Arrays.deepEquals(mb.getMap(), expectedMap));
     }
 
     @Test
@@ -245,5 +245,24 @@ class MazeBuilderTest {
                 .anyMatch(wall -> wall.equals(new Wall(0, 0, -1, 0))));
         mb.moveAndBuild();
         assertEquals(2, maze.getWalls().size());
+    }
+
+    @Test
+    void startsFromGivenPoint() {
+        final TrackingMaze maze1 = new TrackingMaze(3, 3);
+        final TrackingMaze maze2 = new TrackingMaze(3, 3);
+        MazeBuilder mb1 = new MazeBuilder(maze1,
+                new SequentialGuidance(List.of(WEST, NORTH, WEST, SOUTH, SOUTH)),
+                new Point(2, 1));
+        MazeBuilder mb2 = new MazeBuilder(maze2,
+                new SequentialGuidance(List.of(NORTH, NORTH, EAST, SOUTH, EAST)),
+                new Point(0, 2));
+
+        while (!mb1.isFinished() && !mb2.isFinished()) {
+            mb1.moveAndBuild();
+            mb2.moveAndBuild();
+        }
+
+        assertTrue(Arrays.deepEquals(mb1.getMap(), mb2.getMap()));
     }
 }

@@ -1,40 +1,39 @@
 package buildingModel;
 
-import buildingModel.wall.Wall;
 import buildingModel.guidance.Guidance;
 import buildingModel.maze.Maze;
+import buildingModel.wall.Wall;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.util.*;
+import java.util.Stack;
 
 public class MazeBuilder {
-    private final Point position;
     private final Maze maze;
     private final Guidance guidance;
+    @Getter
+    private final Point position;
+    @Getter
     private final boolean[][] map;
-
-    public Stack<Point> getPath() {
-        return path;
-    }
-
+    @Getter
     private final Stack<Point> path = new Stack<>();
 
     public MazeBuilder(Maze maze, Guidance guidance) {
-        this.guidance = guidance;
-        this.maze = maze;
-        this.position = getStartingPoint(maze);
-        this.map = new boolean[maze.getSizeY()][maze.getSizeX()];
-        map[position.y][position.x] = true;
+        this(maze, guidance, getCenter(maze));
     }
 
     @NotNull
-    private Point getStartingPoint(@NotNull Maze maze) {
+    private static Point getCenter(Maze maze) {
         return new Point(maze.getSizeX() / 2, maze.getSizeY() / 2);
     }
 
-    public boolean[][] getMapArray() {
-        return map;
+    public MazeBuilder(Maze maze, Guidance guidance, Point startingPoint) {
+        this.guidance = guidance;
+        this.maze = maze;
+        this.position = startingPoint;
+        this.map = new boolean[maze.getSizeY()][maze.getSizeX()];
+        map[position.y][position.x] = true;
     }
 
     public void moveAndBuild() {
@@ -86,9 +85,5 @@ public class MazeBuilder {
 
     public boolean isFinished() {
         return maze.isFinished();
-    }
-
-    public Point getPosition() {
-        return position;
     }
 }
