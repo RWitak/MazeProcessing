@@ -2,31 +2,30 @@ import buildingModel.BuildingStep;
 import buildingModel.Direction;
 import buildingModel.MazeBuilder;
 import buildingModel.maze.TrackingMaze;
-import buildingModel.wall.RectangleWall;
 import buildingModel.wall.Wall;
+import lombok.experimental.FieldNameConstants;
 
 import java.awt.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.List;
-import java.util.Queue;
 
-import static buildingModel.Direction.NORTH;
-
+@FieldNameConstants(onlyExplicitlyIncluded = true)
 class BasicBuildingModel implements BuildingModel {
     private final TrackingMaze maze;
-    private final int SCALE;
-    private final Queue<RectangleWall> wallQueue;
     private final MazeBuilder mazeBuilder;
+    @FieldNameConstants.Include
+    private Wall currentWall;
+    private Direction direction;
+    private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
-    public BasicBuildingModel(MazeBuilder mazeBuilder, TrackingMaze maze, int SCALE, Queue<RectangleWall> wallQueue) {
+    public BasicBuildingModel(MazeBuilder mazeBuilder,
+                              TrackingMaze maze,
+                              PropertyChangeListener pcl) {
         this.mazeBuilder = mazeBuilder;
         this.maze = maze;
-        this.SCALE = SCALE;
-        this.wallQueue = wallQueue;
-        // FIXME: 18.05.2022 Hardcoded NORTH
-        this.direction = NORTH;
+        support.addPropertyChangeListener(pcl);
     }
-
-    Direction direction;
 
     @Override
     public Point getPosition() {
@@ -36,11 +35,6 @@ class BasicBuildingModel implements BuildingModel {
     @Override
     public Direction getDirection() {
         return direction;
-    }
-
-    @Override
-    public java.util.List<Wall> getWalls() {
-        return (java.util.List<Wall>) maze.getWalls();
     }
 
     @Override
@@ -60,16 +54,16 @@ class BasicBuildingModel implements BuildingModel {
         }
 
         mazeBuilder.moveAndBuild();
+
         if (maze.buildingSteps.empty()) {
             return;
         }
-
         BuildingStep step = maze.buildingSteps.pop();
+
         final Wall wall = step.wall();
         if (wall != null) {
-            // TODO: 18.05.2022 Should not be responsible for scaled RectangleWalls!
-            RectangleWall rw = new RectangleWall(wall, SCALE, SCALE);
-            this.wallQueue.add(rw);
+            support.firePropertyChange(Fields.currentWall, currentWall, wall);
+            this.currentWall = wall;
         }
 
         final Direction direction = step.direction();

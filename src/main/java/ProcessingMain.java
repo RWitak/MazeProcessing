@@ -2,6 +2,7 @@ import buildingModel.MazeBuilder;
 import buildingModel.guidance.RandomGuidance;
 import buildingModel.maze.TrackingMaze;
 import buildingModel.wall.RectangleWall;
+import buildingModel.wall.Wall;
 import pShapes.BuilderSprite;
 import pShapes.Ground;
 import pShapes.VerticalWall;
@@ -10,7 +11,8 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
 
-import java.awt.Point;
+import java.awt.*;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -56,11 +58,17 @@ public class ProcessingMain extends PApplet {
         MAZE_Y = Integer.parseInt(properties.getProperty("maze.y", "20"));
         SCALE = Integer.parseInt(properties.getProperty("scale", "10"));
 
-        TrackingMaze maze = new TrackingMaze(MAZE_X, MAZE_Y);
+        final TrackingMaze maze = new TrackingMaze(MAZE_X, MAZE_Y);
         final Point startingPoint = new Point(MAZE_X / 2, MAZE_Y / 2);
         final RandomGuidance guidance = new RandomGuidance(List.of(NORTH, SOUTH, WEST, EAST));
-        MazeBuilder mazeBuilder = new MazeBuilder(maze, guidance, startingPoint);
-        model = new BasicBuildingModel(mazeBuilder, maze, SCALE, wallQueue);
+        final MazeBuilder mazeBuilder = new MazeBuilder(maze, guidance, startingPoint);
+
+        final PropertyChangeListener propertyChangeListener = event -> {
+            if (event.getPropertyName().equals(BasicBuildingModel.Fields.currentWall)) {
+                wallQueue.add(new RectangleWall((Wall) event.getNewValue(), SCALE, SCALE));
+            }
+        };
+        model = new BasicBuildingModel(mazeBuilder, maze, propertyChangeListener);
 
         WALL_HEIGHT = Integer.parseInt(properties.getProperty("wall.height", String.valueOf(SCALE)));
         WALL_WIDTH = Integer.parseInt(properties.getProperty("wall.width", String.valueOf(SCALE / 3)));
@@ -69,12 +77,13 @@ public class ProcessingMain extends PApplet {
     }
 
     public void setup() {
+        Point p = model.getPosition();
         cam = new PeasyCam(this,
-                MAZE_X * SCALE / 2f,
-                MAZE_Y * SCALE / 2f,
+                p.x * SCALE,
+                p.y * SCALE,
                 0,
                 sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2);
-        cam.rotateX(-PI/3);
+        cam.rotateX(-PI / 3);
         cam.setFreeRotationMode();
 
         final PImage imageHedge = loadImage("hedge.png");
@@ -108,28 +117,28 @@ public class ProcessingMain extends PApplet {
                 radius * (cos(radians(millis() / 30f % 360))),
                 radius * (sin(radians(millis() / 30f % 360))),
                 radius
-                );
+        );
 
         pointLight(0, 89, 89,
                 -radius * (cos(radians(millis() / 30f % 360))),
                 -radius * (sin(radians(millis() / 30f % 360))),
                 radius
-                );
+        );
 
         pointLight(89, 0, 0,
                 -radius * (cos(radians(millis() / 30f % 360))),
                 radius * (sin(radians(millis() / 30f % 360))),
                 radius
-                );
+        );
 
         directionalLight(100, 100, 100, 0, 0, -1);
 
         lightSpecular(55, 55, 55);
-        pointLight(0, 89,0,
+        pointLight(0, 89, 0,
                 radius * (cos(radians(millis() / 30f % 360))),
                 -radius * (sin(radians(millis() / 30f % 360))),
                 radius
-                );
+        );
     }
 
     private void drawScenery() {
@@ -155,7 +164,7 @@ public class ProcessingMain extends PApplet {
 
     private void drawBuilder() {
         Point position = model.getPosition();
-        
+
         push();
         PShape builderSprite = BuilderSprite.getDirectionalPShape(SCALE, WALL_WIDTH, model.getDirection(), this);
         builderSprite.translate(SCALE * (position.x + .5f), SCALE * (position.y + .5f));
@@ -170,7 +179,7 @@ public class ProcessingMain extends PApplet {
                 (float) rectWall.getRect().getCenterY() + SCALE / 2f);
 
         if (rectWall.isHorizontal()) {
-            rotateZ(PI / 2);
+            rotateZ(HALF_PI);
         }
         shape(wallVertical);
         pop();
