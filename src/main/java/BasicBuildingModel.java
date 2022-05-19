@@ -4,6 +4,7 @@ import buildingModel.MazeBuilder;
 import buildingModel.maze.TrackingMaze;
 import buildingModel.wall.Wall;
 import lombok.experimental.FieldNameConstants;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.beans.PropertyChangeListener;
@@ -28,6 +29,37 @@ class BasicBuildingModel implements BuildingModel {
     }
 
     @Override
+    public void build() {
+        if (isFinished()) {
+            return;
+        }
+        mazeBuilder.moveAndBuild();
+
+        if (maze.buildingSteps.empty()) {
+            return;
+        }
+        BuildingStep step = maze.buildingSteps.pop();
+
+        updateWall(step);
+        updateDirection(step);
+    }
+
+    private void updateDirection(@NotNull BuildingStep step) {
+        final Direction direction = step.direction();
+        if (direction != null) {
+            this.direction = direction;
+        }
+    }
+
+    private void updateWall(@NotNull BuildingStep step) {
+        final Wall wall = step.wall();
+        if (wall != null) {
+            support.firePropertyChange(Fields.currentWall, currentWall, wall);
+            this.currentWall = wall;
+        }
+    }
+
+    @Override
     public Point getPosition() {
         return mazeBuilder.getPosition();
     }
@@ -45,30 +77,5 @@ class BasicBuildingModel implements BuildingModel {
     @Override
     public boolean isFinished() {
         return mazeBuilder.isFinished();
-    }
-
-    @Override
-    public void build() {
-        if (isFinished()) {
-            return;
-        }
-
-        mazeBuilder.moveAndBuild();
-
-        if (maze.buildingSteps.empty()) {
-            return;
-        }
-        BuildingStep step = maze.buildingSteps.pop();
-
-        final Wall wall = step.wall();
-        if (wall != null) {
-            support.firePropertyChange(Fields.currentWall, currentWall, wall);
-            this.currentWall = wall;
-        }
-
-        final Direction direction = step.direction();
-        if (direction != null) {
-            this.direction = direction;
-        }
     }
 }

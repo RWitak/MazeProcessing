@@ -3,13 +3,16 @@ import buildingModel.guidance.RandomGuidance;
 import buildingModel.maze.TrackingMaze;
 import buildingModel.wall.RectangleWall;
 import buildingModel.wall.Wall;
-import pShapes.BuilderSprite;
-import pShapes.Ground;
-import pShapes.VerticalWall;
+import org.jetbrains.annotations.NotNull;
 import peasy.PeasyCam;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
+import view.lighting.LightDesign1;
+import view.lighting.Lighting;
+import view.pShapes.BuilderSprite;
+import view.pShapes.Ground;
+import view.pShapes.VerticalWall;
 
 import java.awt.*;
 import java.beans.PropertyChangeListener;
@@ -27,6 +30,7 @@ public class ProcessingMain extends PApplet {
     private boolean SHOW_PATH;
     private int SCALE, MAZE_X, MAZE_Y, WALL_HEIGHT, WALL_WIDTH;
     private BuildingModel model;
+    private Lighting lighting;
     private PeasyCam cam;
 
     private PShape wallVertical;
@@ -38,6 +42,29 @@ public class ProcessingMain extends PApplet {
     }
 
     public void settings() {
+        final Properties properties = getProperties();
+
+        setConstants(properties);
+        setScreen(properties);
+        setModel();
+    }
+
+    public void setup() {
+        setUpCam();
+        setUpLighting();
+        setUpPShapes();
+    }
+
+    public void draw() {
+        model.build();
+
+        setLighting();
+        setCamera();
+        drawScenery();
+    }
+
+    @NotNull
+    private Properties getProperties() {
         final InputStream config = Thread
                 .currentThread()
                 .getContextClassLoader()
@@ -48,16 +75,28 @@ public class ProcessingMain extends PApplet {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return properties;
+    }
 
-        final int SCREEN_X, SCREEN_Y;
-        SCREEN_X = Integer.parseInt(properties.getProperty("screen.x", String.valueOf(displayWidth)));
-        SCREEN_Y = Integer.parseInt(properties.getProperty("screen.y", String.valueOf(displayHeight)));
-        size(SCREEN_X, SCREEN_Y, P3D);
-
+    private void setConstants(@NotNull Properties properties) {
         MAZE_X = Integer.parseInt(properties.getProperty("maze.x", "20"));
         MAZE_Y = Integer.parseInt(properties.getProperty("maze.y", "20"));
         SCALE = Integer.parseInt(properties.getProperty("scale", "10"));
 
+        WALL_HEIGHT = Integer.parseInt(properties.getProperty("wall.height", String.valueOf(SCALE)));
+        WALL_WIDTH = Integer.parseInt(properties.getProperty("wall.width", String.valueOf(SCALE / 3)));
+
+        SHOW_PATH = Boolean.parseBoolean(properties.getProperty("path.show", String.valueOf(true)));
+    }
+
+    private void setScreen(@NotNull Properties properties) {
+        final int screenX, screenY;
+        screenX = Integer.parseInt(properties.getProperty("screen.x", String.valueOf(displayWidth)));
+        screenY = Integer.parseInt(properties.getProperty("screen.y", String.valueOf(displayHeight)));
+        size(screenX, screenY, P3D);
+    }
+
+    private void setModel() {
         final TrackingMaze maze = new TrackingMaze(MAZE_X, MAZE_Y);
         final Point startingPoint = new Point(MAZE_X / 2, MAZE_Y / 2);
         final RandomGuidance guidance = new RandomGuidance(List.of(NORTH, SOUTH, WEST, EAST));
@@ -69,14 +108,13 @@ public class ProcessingMain extends PApplet {
             }
         };
         model = new BasicBuildingModel(mazeBuilder, maze, propertyChangeListener);
-
-        WALL_HEIGHT = Integer.parseInt(properties.getProperty("wall.height", String.valueOf(SCALE)));
-        WALL_WIDTH = Integer.parseInt(properties.getProperty("wall.width", String.valueOf(SCALE / 3)));
-
-        SHOW_PATH = Boolean.parseBoolean(properties.getProperty("path.show", String.valueOf(true)));
     }
 
-    public void setup() {
+    private void setUpLighting() {
+        this.lighting = new LightDesign1(this, MAZE_X * SCALE, MAZE_Y * SCALE);
+    }
+
+    private void setUpCam() {
         Point p = model.getPosition();
         cam = new PeasyCam(this,
                 p.x * SCALE,
@@ -85,7 +123,9 @@ public class ProcessingMain extends PApplet {
                 sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2);
         cam.rotateX(-PI / 3);
         cam.setFreeRotationMode();
+    }
 
+    private void setUpPShapes() {
         final PImage imageHedge = loadImage("hedge.png");
         final PImage imageGround = loadImage("gravel_dark.png");
 
@@ -93,12 +133,9 @@ public class ProcessingMain extends PApplet {
         ground = Ground.getPShape(MAZE_X, MAZE_Y, SCALE, WALL_HEIGHT, this, imageGround);
     }
 
-    public void draw() {
-        model.build();
-
-        setLighting();
-        setCamera();
-        drawScenery();
+    private void setLighting() {
+        noLights();
+        lighting.turnOn();
     }
 
     private void setCamera() {
@@ -106,39 +143,6 @@ public class ProcessingMain extends PApplet {
         cam.lookAt((position.x) * SCALE,
                 (position.y) * SCALE,
                 0);
-    }
-
-    private void setLighting() {
-        noLights();
-
-        final float radius = sqrt(sq(MAZE_X * SCALE) + sq(MAZE_Y * SCALE)) / 2f;
-
-        pointLight(89, 89, 0,
-                radius * (cos(radians(millis() / 30f % 360))),
-                radius * (sin(radians(millis() / 30f % 360))),
-                radius
-        );
-
-        pointLight(0, 89, 89,
-                -radius * (cos(radians(millis() / 30f % 360))),
-                -radius * (sin(radians(millis() / 30f % 360))),
-                radius
-        );
-
-        pointLight(89, 0, 0,
-                -radius * (cos(radians(millis() / 30f % 360))),
-                radius * (sin(radians(millis() / 30f % 360))),
-                radius
-        );
-
-        directionalLight(100, 100, 100, 0, 0, -1);
-
-        lightSpecular(55, 55, 55);
-        pointLight(0, 89, 0,
-                radius * (cos(radians(millis() / 30f % 360))),
-                -radius * (sin(radians(millis() / 30f % 360))),
-                radius
-        );
     }
 
     private void drawScenery() {
@@ -173,7 +177,7 @@ public class ProcessingMain extends PApplet {
         pop();
     }
 
-    public void drawWall(RectangleWall rectWall) {
+    public void drawWall(@NotNull RectangleWall rectWall) {
         push();
         translate((float) rectWall.getRect().getCenterX() + SCALE / 2f,
                 (float) rectWall.getRect().getCenterY() + SCALE / 2f);

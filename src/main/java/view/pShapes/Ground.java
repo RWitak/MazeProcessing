@@ -1,4 +1,4 @@
-package pShapes;
+package view.pShapes;
 
 import processing.core.PApplet;
 import processing.core.PImage;

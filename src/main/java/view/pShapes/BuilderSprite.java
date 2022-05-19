@@ -1,10 +1,10 @@
-package pShapes;
+package view.pShapes;
 
 import buildingModel.Direction;
 import processing.core.PApplet;
 import processing.core.PShape;
 
-import static pShapes.Cylindrical.*;
+import static view.pShapes.Cylindrical.*;
 import static processing.core.PApplet.*;
 
 public class BuilderSprite extends PShape {
