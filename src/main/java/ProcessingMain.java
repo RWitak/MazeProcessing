@@ -8,9 +8,9 @@ import peasy.PeasyCam;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
+import view.Drawer;
 import view.lighting.LightDesign1;
 import view.lighting.Lighting;
-import view.pShapes.BuilderSprite;
 import view.pShapes.Ground;
 import view.pShapes.VerticalWall;
 
@@ -18,7 +18,6 @@ import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -49,20 +48,6 @@ public class ProcessingMain extends PApplet {
         setModel();
     }
 
-    public void setup() {
-        setUpCam();
-        setUpLighting();
-        setUpPShapes();
-    }
-
-    public void draw() {
-        model.build();
-
-        setLighting();
-        setCamera();
-        drawScenery();
-    }
-
     @NotNull
     private Properties getProperties() {
         final InputStream config = Thread
@@ -90,9 +75,8 @@ public class ProcessingMain extends PApplet {
     }
 
     private void setScreen(@NotNull Properties properties) {
-        final int screenX, screenY;
-        screenX = Integer.parseInt(properties.getProperty("screen.x", String.valueOf(displayWidth)));
-        screenY = Integer.parseInt(properties.getProperty("screen.y", String.valueOf(displayHeight)));
+        final int screenX = Integer.parseInt(properties.getProperty("screen.x", String.valueOf(displayWidth)));
+        final int screenY = Integer.parseInt(properties.getProperty("screen.y", String.valueOf(displayHeight)));
         size(screenX, screenY, P3D);
     }
 
@@ -108,6 +92,12 @@ public class ProcessingMain extends PApplet {
             }
         };
         model = new BasicBuildingModel(mazeBuilder, maze, propertyChangeListener);
+    }
+
+    public void setup() {
+        setUpCam();
+        setUpLighting();
+        setUpPShapes();
     }
 
     private void setUpLighting() {
@@ -133,6 +123,14 @@ public class ProcessingMain extends PApplet {
         ground = Ground.getPShape(MAZE_X, MAZE_Y, SCALE, WALL_HEIGHT, this, imageGround);
     }
 
+    public void draw() {
+        model.build();
+
+        setLighting();
+        setCamera();
+        drawScenery();
+    }
+
     private void setLighting() {
         noLights();
         lighting.turnOn();
@@ -148,61 +146,19 @@ public class ProcessingMain extends PApplet {
     private void drawScenery() {
         background(0, 22, 11);
 
-        drawGround();
-        drawBuilder();
+        Drawer drawer = new Drawer(this,
+                model.getPosition(),
+                model.getDirection(),
+                SCALE,
+                WALL_WIDTH,
+                WALL_HEIGHT);
 
-        for (RectangleWall rectangleWall : wallQueue) {
-            drawWall(rectangleWall);
-        }
+        drawer.drawGround(ground);
+        drawer.drawBuilder();
+        wallQueue.forEach(rectangleWall -> drawer.drawWall(rectangleWall, wallVertical));
 
         if (SHOW_PATH) {
-            drawPath();
-        }
-    }
-
-    private void drawGround() {
-        push();
-        shape(ground);
-        pop();
-    }
-
-    private void drawBuilder() {
-        Point position = model.getPosition();
-
-        push();
-        PShape builderSprite = BuilderSprite.getDirectionalPShape(SCALE, WALL_WIDTH, model.getDirection(), this);
-        builderSprite.translate(SCALE * (position.x + .5f), SCALE * (position.y + .5f));
-        builderSprite.translate(0, 0, -WALL_HEIGHT / 2f);
-        shape(builderSprite);
-        pop();
-    }
-
-    public void drawWall(@NotNull RectangleWall rectWall) {
-        push();
-        translate((float) rectWall.getRect().getCenterX() + SCALE / 2f,
-                (float) rectWall.getRect().getCenterY() + SCALE / 2f);
-
-        if (rectWall.isHorizontal()) {
-            rotateZ(HALF_PI);
-        }
-        shape(wallVertical);
-        pop();
-    }
-
-    private void drawPath() {
-        Iterator<Point> waypoints = model.getPath().iterator();
-        while (waypoints.hasNext()) {
-            Point p = waypoints.next();
-            push();
-            noStroke();
-            if (waypoints.hasNext()) {
-                fill(150);
-            } else {
-                fill(255, 0, 0);
-            }
-            translate((float) ((p.getX() + .5f) * SCALE), (float) (p.getY() + .5f) * SCALE);
-            sphere(SCALE / 10f);
-            pop();
+            drawer.drawPath(model.getPath().iterator());
         }
     }
 }
