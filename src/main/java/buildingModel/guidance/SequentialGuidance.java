@@ -9,11 +9,16 @@ import java.util.Optional;
 
 
 /**
- * Ignores current position and just guides in the provided directions.
+ * Ignores current position and just guides in the provided {@link Direction}s.
+ * Does not repeat when the given <code>Direction</code>s are exhausted!
  */
 public class SequentialGuidance implements Guidance {
     private final Iterator<Direction> iter;
 
+    /**
+     * Sole constructor for {@link SequentialGuidance}.
+     * @param directions The <code>Iterable</code> of {@link Direction}s to be used sequentially.
+     */
     public SequentialGuidance(@NotNull Iterable<Direction> directions) {
         iter = directions.iterator();
     }

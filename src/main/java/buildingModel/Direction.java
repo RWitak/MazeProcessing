@@ -1,5 +1,8 @@
 package buildingModel;
 
+/**
+ * Describes displacement on the x and y axes of a 2D plane after taking a step in the given cardinal direction.
+ */
 public enum Direction {
     NORTH(0, -1),
     SOUTH(0, 1),

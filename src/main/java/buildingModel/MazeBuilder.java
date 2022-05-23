@@ -9,6 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.util.Stack;
 
+/**
+ * Allows stepwise building of a {@link Maze} following a given {@link Guidance}.
+ */
 public class MazeBuilder {
     private final Maze maze;
     private final Guidance guidance;
@@ -19,16 +22,29 @@ public class MazeBuilder {
     @Getter
     private final Stack<Point> path = new Stack<>();
 
+    /**
+     * Creates a {@link MazeBuilder} that starts at the center.
+     * @param maze The {@link Maze} to build.
+     * @param guidance The {@link Guidance} to apply at each step.
+     * @see #MazeBuilder(Maze, Guidance, Point)
+     */
     public MazeBuilder(Maze maze, Guidance guidance) {
         this(maze, guidance, getCenter(maze));
     }
 
     @NotNull
-    private static Point getCenter(Maze maze) {
+    private static Point getCenter(@NotNull Maze maze) {
         return new Point(maze.getSizeX() / 2, maze.getSizeY() / 2);
     }
 
-    public MazeBuilder(Maze maze, Guidance guidance, Point startingPoint) {
+    /**
+     * Creates a {@link MazeBuilder} that starts at a given starting {@link Point}.
+     * @param maze The {@link Maze} to build.
+     * @param guidance The {@link Guidance} to apply at each step.
+     * @param startingPoint Where to start building.
+     * @see #MazeBuilder(Maze, Guidance)
+     */
+    public MazeBuilder(@NotNull Maze maze, Guidance guidance, Point startingPoint) {
         this.guidance = guidance;
         this.maze = maze;
         this.position = startingPoint;
@@ -36,6 +52,12 @@ public class MazeBuilder {
         map[position.y][position.x] = true;
     }
 
+    /**
+     * Triggers the next step in building while updating the virtual position of the "builder". <br/>
+     * Modifies the {@link BuildingStep}s of the {@link Maze}.
+     * Will backtrack when all possible steps are exhausted.
+     * When no more routes are available, the Maze is set to <code>finished</code>.
+     */
     public void moveAndBuild() {
         Direction direction = guidance.nextDirection(position).orElse(null);
 
@@ -50,23 +72,25 @@ public class MazeBuilder {
         final Point nextPos = position.getLocation();
         nextPos.translate(direction.dx, direction.dy);
 
-        if (maze.isInside(nextPos)) {
-            if (doesNotCross(nextPos)) {
-                path.push(position.getLocation());
-                position.setLocation(nextPos);
-                map[position.y][position.x] = true;
+        if (canAdvanceTo(nextPos)) {
+            path.push(position.getLocation());
+            position.setLocation(nextPos);
+            map[position.y][position.x] = true;
 
-                final BuildingStep step = new BuildingStep(position.getLocation(), direction, null);
-                maze.addBuildingStep(step);
-                return;
-            }
+            final BuildingStep step = new BuildingStep(position.getLocation(), direction, null);
+            maze.addBuildingStep(step);
+            return;
         }
-        if (!isPreviousPosition(nextPos)) {
+        if (isPreviousPosition(nextPos)) {
+            maze.addBuildingStep(new BuildingStep(position.getLocation(), direction, null));
+        } else {
             Wall wall = new Wall(position.getLocation(), nextPos.getLocation());
             maze.addBuildingStep(new BuildingStep(position.getLocation(), direction, wall));
-        } else {
-            maze.addBuildingStep(new BuildingStep(position.getLocation(), direction, null));
         }
+    }
+
+    private boolean canAdvanceTo(Point nextPos) {
+        return maze.isInside(nextPos) && doesNotCrossPath(nextPos);
     }
 
     private void backtrack() {
@@ -75,7 +99,7 @@ public class MazeBuilder {
         }
     }
 
-    private boolean doesNotCross(Point point) {
+    private boolean doesNotCrossPath(@NotNull Point point) {
         return !map[point.y][point.x];
     }
 
