@@ -4,8 +4,28 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
 
+/**
+ * A 3-dimensional vertical wall (separates two points on the x-axis) wrapped by a texture,
+ * presented as drawable {@link PShape}.
+ */
 public class VerticalWall extends PShape {
-    public static PShape getPShape(int scale, int wallWidth, int wallHeight, PApplet caller, PImage img) {
+    /**
+     * Creates a drawable {@link PShape} wall
+     * with vertical orientation (separates two points on the x-axis)
+     * that is suitable for building more complex structures.
+     * Facilitates joining adjacent and orthogonal walls seamlessly.
+     * Must be explicitly rotated to build a horizontal wall instead.
+     * @param width The width of the wall in pixels.
+     *              Walls are created in a way that makes them fit together seamlessly
+     *              around a square of the given side length.
+     * @param thickness The thickness of the wall in pixels.
+     * @param height The height of the wall in pixels.
+     * @param caller The calling {@link PApplet}
+     * @param img A texture {@link PImage} for the wall.
+     *            Gets wrapped around all sides individually to facilitate seamless textures.
+     * @return The created <code>VerticalWall</code> <code>PShape</code> ready to be drawn.
+     */
+    public static PShape getPShape(int width, int thickness, int height, PApplet caller, PImage img) {
         caller.push();
         caller.fill(255);
         caller.noStroke();
@@ -13,17 +33,17 @@ public class VerticalWall extends PShape {
         caller.textureMode(NORMAL);
         PShape wallVertical = caller.createShape(GROUP);
 
-        final float outerLeft = -scale / 2f;
-        final float middleLeft = -(scale - wallWidth) / 2f;
-        final float middleRight = (scale - wallWidth) / 2f;
-        final float outerRight = scale / 2f;
+        final float outerLeft = -width / 2f;
+        final float middleLeft = -(width - thickness) / 2f;
+        final float middleRight = (width - thickness) / 2f;
+        final float outerRight = width / 2f;
 
-        final float backY = wallWidth / 2f;
+        final float backY = thickness / 2f;
         final float midY = 0f;
-        final float frontY = -wallWidth / 2f;
+        final float frontY = -thickness / 2f;
 
-        final float topZ = wallHeight / 2f;
-        final float bottomZ = -wallHeight / 2f;
+        final float topZ = height / 2f;
+        final float bottomZ = -height / 2f;
 
         PShape bottom = caller.createShape();
         bottom.beginShape(QUAD_STRIP);
@@ -67,7 +87,7 @@ public class VerticalWall extends PShape {
         hull.endShape();
 
         wallVertical.addChild(top);
-//        do not draw bottom when using ground to avoid clipping glitch
+//        do not draw bottom when using ground on same level to avoid clipping glitch
 //        wallVertical.addChild(bottom);
         wallVertical.addChild(hull);
         caller.pop();

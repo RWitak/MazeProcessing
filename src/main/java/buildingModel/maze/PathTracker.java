@@ -6,6 +6,8 @@ import java.awt.*;
 
 /**
  * An object which has a location on a 2D plane and a cardinal {@link Direction}.
+ * These values are expected to change over time, forming a path -
+ * hence the name <code>PathTracker</code>.
  */
 public interface PathTracker {
     /**

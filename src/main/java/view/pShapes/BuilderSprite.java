@@ -1,18 +1,39 @@
 package view.pShapes;
 
 import buildingModel.Direction;
+import org.jetbrains.annotations.NotNull;
 import processing.core.PApplet;
 import processing.core.PShape;
 
 import static view.pShapes.Cylindrical.*;
 import static processing.core.PApplet.*;
 
+/**
+ * A {@link PShape} meant to follow the point of building of a maze.
+ * Can indicate {@link Direction} if called with {@link #getDirectionalPShape(float, Direction, PApplet)}.
+ */
 public class BuilderSprite extends PShape {
-    public static PShape getPShape(int scale, int wallWidth, PApplet proc) {
+    /**
+     * The not yet rotated {@link PShape} representing a builder.
+     * Uses {@link #getSnowman(float, PApplet)} internally.
+     * @param maxFootPrint The maximum dimension (x or y) of the footprint in pixels.
+     *                     Makes sure the <code>PShape</code> will fit inside certain bounds.
+     *                     (The <code>PShape</code> is assumed to be centered
+     *                     so that the assured fit will hold under any rotation around z-axis.)
+     * @param proc The calling {@link PApplet}.
+     * @return A sprite <code>PShape</code> facing {@link Direction#SOUTH}
+     * (or not showing direction at all).
+     */
+    public static @NotNull PShape getUnidirectionalPShape(float maxFootPrint, @NotNull PApplet proc) {
+        return getSnowman(maxFootPrint, proc);
+    }
+
+    @NotNull
+    private static PShape getSnowman(float maxFootPrint, @NotNull PApplet proc) {
         proc.push();
         proc.noStroke();
 
-        float bigRadius = (scale - wallWidth / 2f) / 3f;
+        float bigRadius = maxFootPrint / 2.5f;
         float middleRadius = bigRadius * .8f;
         float smallRadius = bigRadius * .6f;
         float buttonRadius = bigRadius * .1f;
@@ -146,8 +167,20 @@ public class BuilderSprite extends PShape {
         return snowman;
     }
 
-    public static PShape getDirectionalPShape(int scale, int wallWidth, Direction direction, PApplet proc) {
-        final PShape pShape = getPShape(scale, wallWidth, proc);
+    /**
+     * A rotated {@link PShape} representing a builder.
+     * Uses {@link #getSnowman(float, PApplet)} internally.
+     * @param maxFootPrint The maximum dimension (x or y) of the footprint in pixels.
+     *                     Makes sure the <code>PShape</code> will fit inside certain bounds.
+     *                     (The <code>PShape</code> is assumed to be centered
+     *                     so that the assured fit will hold under any rotation around z-axis.)
+     * @param direction The {@link Direction} in which the builder should face.
+     * @param proc The calling {@link PApplet}.
+     * @return A sprite <code>PShape</code> facing {@link Direction#SOUTH}
+     * (or not showing direction at all).
+     */
+    public static @NotNull PShape getDirectionalPShape(float maxFootPrint, @NotNull Direction direction, PApplet proc) {
+        final PShape pShape = getUnidirectionalPShape(maxFootPrint, proc);
         final float angle;
         switch (direction) {
             case EAST -> angle = -HALF_PI;
