@@ -1,8 +1,9 @@
 # MazeProcessing
 
 Create random, unique mazes in a 3D world!
-![](src/main/resources/Screenshot 2022-06-26 150358.jpg)  
-![](src/main/resources/Screenshot 2022-06-26 154733.jpg)
+
+![](src/main/resources/screenshot_closer.jpg "A 3D snowman inside a maze") 
+![](src/main/resources/screenshot_farther.jpg "A large maze viewed from an oblique angle")
 
 ## What It Does
 
